@@ -1,6 +1,9 @@
 from tika import parser
+import glob
 
-rawText = parser.from_file('sample.pdf')
+pdf_list = glob.glob("*pdf")
+
+rawText = parser.from_file(pdf_list[0])
 
 rawList = rawText['content']
 
