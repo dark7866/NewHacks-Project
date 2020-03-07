@@ -1,2 +1,0 @@
-# NewHacks-Project
-
