@@ -4,6 +4,8 @@ import glob
 import io
 import base64
 from flask import Flask, redirect, render_template, request
+from docx import Document 
+from tika import parser
 
 from google.cloud import datastore
 from google.cloud import storage
@@ -43,12 +45,87 @@ def show():
 
 @app.route('/docx_scan.html', methods=['GET'])
 def doc_page():
-    return render_template('docx_scan.html')
+    datastore_client = datastore.Client()
+
+    query = datastore_client.query(kind='DOCS')
+    image_entities = list(query.fetch())
+    
+    return render_template('docx_scan.html', image_entities=image_entities)
+
+@app.route('/upload_photo_docx', methods=['GET', 'POST'])
+def upload_photo_docx():
+    
+    photo = request.files['file']
+
+    doc = Document(photo.filename)
+
+    text = ''
+    for paragraph in doc.paragraphs:
+        text += paragraph.text
+        text += '\n'
+    
+    
+    # Create a Cloud Datastore client.
+    translate_client = translate.Client()
+    result = translate_client.translate(
+    text, target_language="en")
+    datastore_client = datastore.Client()
+
+    synthesize_text(result['translatedText'], "doc")
+
+
+    return redirect('/docx_scan.html')
+
 @app.route('/pdf_scan.html', methods=['GET'])
 def pdf_page():
-    return render_template('pdf_scan.html')
-@app.route('/upload_photo', methods=['GET', 'POST'])
-def upload_photo():
+    datastore_client = datastore.Client()
+    query=datastore_client.query(kind='PDFs')
+    image_entities = list(query.fetch())
+
+    return render_template('pdf_scan.html', image_entities=image_entities)
+
+@app.route('/upload_photo_pdf', methods=['GET', 'POST'])
+def upload_photo_pdf():
+
+    storage_client = storage.Client()
+
+    # Get the bucket that the file will be uploaded to.
+    bucket = storage_client.get_bucket(CLOUD_STORAGE_BUCKET)
+
+
+    photo = request.files['file']
+    rawText = parser.from_file(photo.filename)
+    rawList = rawText['content']
+
+    blob = bucket.blob(photo.filename)
+    blob.upload_from_string(
+            photo.read(), content_type=photo.content_type)
+    # Make the blob publicly viewable.
+    blob.make_public()
+    
+    kind = 'PDFs'
+
+    datastore_client = datastore.Client()
+
+    key = datastore_client.key(kind, blob.name)
+    
+    rawList = rawList.replace('\n\n', '\n').strip()
+
+    entity = datastore.Entity(key)
+    print(entity)
+    entity['blob_name'] = "test" 
+    print(rawList)
+
+    translate_client = translate.Client()
+    result = translate_client.translate(
+    rawList, target_language="en")
+
+    synthesize_text(result['translatedText'], "pdf")
+
+    return redirect('/pdf_scan.html')
+
+@app.route('/upload_photo_img', methods=['GET', 'POST'])
+def upload_photo_img():
     global counter
     counter+=1
     photo = request.files['file']
@@ -81,7 +158,7 @@ def upload_photo():
     s, target_language="en")
     datastore_client = datastore.Client()
 
-    synthesize_text(result['translatedText'])
+    synthesize_text(result['translatedText'], "img")
 
     if(counter==1):
         datastore_client.delete(datastore_client.key(kind, name))
@@ -116,7 +193,7 @@ def upload_photo():
     # Redirect to the home page.
     return redirect('/img_scan.html')
 
-def synthesize_text(text):
+def synthesize_text(text, doc):
     """Synthesizes speech from the input string of text."""
     client = texttospeech.TextToSpeechClient()
 
@@ -133,8 +210,16 @@ def synthesize_text(text):
         audio_encoding=texttospeech.enums.AudioEncoding.MP3)
 
     response = client.synthesize_speech(input_text, voice, audio_config)
-    with open('output.mp3', 'wb') as out:
-        out.write(response.audio_content)
+    if(doc=="img"):
+        with open('output.mp3', 'wb') as out:
+            out.write(response.audio_content)
+    if(doc=="pdf"):
+        with open('output2.mp3', 'wb') as out:
+            out.write(response.audio_content)
+    if(doc=="doc"):
+        with open('output3.mp3', 'wb') as out:
+            out.write(response.audio_content)
+
 @app.errorhandler(500)
 def server_error(e):
     logging.exception('An error occurred during a request.')
