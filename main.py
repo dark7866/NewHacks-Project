@@ -18,7 +18,13 @@ CLOUD_STORAGE_BUCKET = "indigo-skyline-270422"
 app = Flask(__name__)
 counter = 0
 @app.route('/')
-def homepage():
+def home():
+    return render_template('home_scan.html')
+@app.route('/home_scan.html', methods=['GET'])
+def home2():
+    return render_template('home_scan.html')
+@app.route('/img_scan.html', methods=['GET'])
+def show():
     global counter
     counter+=1
     # Create a Cloud Datastore client.
@@ -33,9 +39,14 @@ def homepage():
         image_entities.clear()
 
     # Return a Jinja2 HTML template and pass in image_entities as a parameter.
-    return render_template('homepage.html', image_entities=image_entities)
+    return render_template('img_scan.html', image_entities=image_entities)
 
-
+@app.route('/docx_scan.html', methods=['GET'])
+def doc_page():
+    return render_template('docx_scan.html')
+@app.route('/pdf_scan.html', methods=['GET'])
+def pdf_page():
+    return render_template('pdf_scan.html')
 @app.route('/upload_photo', methods=['GET', 'POST'])
 def upload_photo():
     global counter
@@ -103,7 +114,7 @@ def upload_photo():
     datastore_client.put(entity)
 
     # Redirect to the home page.
-    return redirect('/')
+    return redirect('/img_scan.html')
 
 def synthesize_text(text):
     """Synthesizes speech from the input string of text."""
@@ -134,6 +145,4 @@ def server_error(e):
 
 
 if __name__ == '__main__':
-    # This is used when running locally. Gunicorn is used to run the
-    # application on Google App Engine. See entrypoint in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
