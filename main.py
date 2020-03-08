@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 import glob
-from tika import parser
 import io
+import base64
 from flask import Flask, redirect, render_template, request
 
 from google.cloud import datastore
@@ -70,6 +70,8 @@ def upload_photo():
     s, target_language="en")
     datastore_client = datastore.Client()
 
+    audio_encode = synthesize_text('h')
+
     if(counter==1):
         datastore_client.delete(datastore_client.key(kind, name))
     # Fetch the current date / time.
@@ -90,10 +92,12 @@ def upload_photo():
     # Construct the new entity using the key. Set dictionary values for entity
     # keys blob_name, storage_public_url, timestamp, and joy.
     entity = datastore.Entity(key)
-    entity['blob_name'] = result['translatedText'] 
+    result = result['translatedText']
+    entity['blob_name'] = result 
     entity['timestamp'] = current_datetime
     entity['image_public_url'] = blob.public_url
     entity['joy'] = face_joy
+    entity['audio'] = audio_encode 
 
     # Save the new entity to Datastore.
     datastore_client.put(entity)
@@ -101,17 +105,24 @@ def upload_photo():
     # Redirect to the home page.
     return redirect('/')
 
-def pdf_to_text(name):
+def synthesize_text(text):
+    """Synthesizes speech from the input string of text."""
+    client = texttospeech.TextToSpeechClient()
 
-    rawText = parser.from_file(name)
+    input_text = texttospeech.types.SynthesisInput(text=text)
 
-    rawList = rawText['content']
+    # Note: the voice can also be specified by name.
+    # Names of voices can be retrieved with client.list_voices().
+    voice = texttospeech.types.VoiceSelectionParams(
+        language_code='en-US',
+        name='en-US-Standard-C',
+        ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE)
 
-    rawList = rawList.replace('\n\n', '\n')
+    audio_config = texttospeech.types.AudioConfig(
+        audio_encoding=texttospeech.enums.AudioEncoding.MP3)
 
-    rawList=rawList.strip()
-
-    return rawList
+    response = client.synthesize_speech(input_text, voice, audio_config)
+    return base64.b64encode(response.audio_content)
 
 @app.errorhandler(500)
 def server_error(e):

@@ -1,7 +1,5 @@
-<h1>Google Cloud Platform - Face Detection Sample</h1>
-
-<p>This Python Flask application demonstrates App Engine Flexible, Google Cloud
-Storage, Datastore, and the Cloud Vision API.</p>
+<p>Test
+</p>
 
 <br>
 
@@ -12,9 +10,12 @@ Storage, Datastore, and the Cloud Vision API.</p>
       <input type="submit" name="submit" value="Submit">
     </form>
     {% for image_entity in image_entities %}
-      <img src="{{image_entity['image_public_url']}}" width=200 height=200>
-      <p>{{image_entity['blob_name']}} was uploaded {{image_entity['timestamp']}}.<\p>
-      <p>Joy Likelihood for Face: {{image_entity['joy']}}</p>
-    {% endfor %}
+    <img src="{{image_entity['image_public_url']}}" width=200 height=200>
+      <p>{{image_entity['blob_name']}}.</p>
+      {% endfor %}
+    <audio controls="controls">
+    	<source src="data:audio/mpeg;base64,"+{image_entity['audio']}>
+    </audio>
+
   </body>
 </html> 
