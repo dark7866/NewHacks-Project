@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html lang = "en">
+
+
+  <head>
+
+    <Title>
+      Scanlations
+    </Title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+    #header{
+      border: black;
+      padding: 1px;
+      background: lightblue;
+    }
+
+    * {
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      /* Style the top navigation bar */
+      .topnav {
+        overflow: hidden;
+        background-color: #000;
+      }
+
+      /* Style the topnav links */
+      .topnav a {
+        float: left;
+        display: block;
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+      }
+
+      /* Change color on hover */
+      .topnav a:hover {
+        background-color: #ddd;
+        color: black;
+      }
+
+      /* Style the content */
+      .content {
+        background-color: #ddd;
+        padding: 10px;
+        
+      }
+
+      /* Style the footer */
+      .footer {
+        background-color: #f1f1f1;
+        padding: 10px;
+      }
+    </style>
+
+
+  </head>
+
+  <body>
+
+    <div id = "header">
+      <h1><em>Scanlations</em></h1>
+    </div>
+
+    <div class="topnav">
+      <a href='home_scan.html'>HOME</a>
+      <a href="pdf_scan.html">PDF</a>
+      <a href="docx_scan.html">DOCX</a>
+      <a href="#">IMG</a>
+    </div>
+    
+    <div class="content">
+
+        <h2><b> IMAGE Translation</b></h2>
+
+        <p>This Python Flask application translates an uploaded file, whether it may be  a .docx, .pdf, or an image file.
+            The language that the document is translated to can be selected via a dropdown button.
+        </p>
+        <br>
+
+        <form action="upload_photo" method="POST" enctype="multipart/form-data">
+            Upload File: <input type="file" name="file"><br>
+            <input type="submit" name="submit" value="Submit">
+        </form>
+        {% for image_entity in image_entities %}
+            <img src="{{image_entity['image_public_url']}}" width=200 height=200>
+            <p>{{image_entity['blob_name']}} was uploaded {{image_entity['timestamp']}}.</p>
+            <p>Joy Likelihood for Face: {{image_entity['joy']}}</p>
+        {% endfor %}
+    </div>
+
+    <div class="footer">
+      <p>Footer</p>
+    </div>
+
+  </body>
+</html>
