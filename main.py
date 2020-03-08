@@ -12,7 +12,7 @@ from google.cloud import texttospeech
 from google.cloud import translate_v2 as translate
 
 
-CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
+CLOUD_STORAGE_BUCKET = "indigo-skyline-270422" 
 
 
 app = Flask(__name__)
@@ -70,7 +70,7 @@ def upload_photo():
     s, target_language="en")
     datastore_client = datastore.Client()
 
-    audio_encode = synthesize_text('h')
+    synthesize_text(result['translatedText'])
 
     if(counter==1):
         datastore_client.delete(datastore_client.key(kind, name))
@@ -97,7 +97,7 @@ def upload_photo():
     entity['timestamp'] = current_datetime
     entity['image_public_url'] = blob.public_url
     entity['joy'] = face_joy
-    entity['audio'] = audio_encode 
+    #entity['audio'] = audio_encode 
 
     # Save the new entity to Datastore.
     datastore_client.put(entity)
@@ -122,8 +122,8 @@ def synthesize_text(text):
         audio_encoding=texttospeech.enums.AudioEncoding.MP3)
 
     response = client.synthesize_speech(input_text, voice, audio_config)
-    return base64.b64encode(response.audio_content)
-
+    with open('output.mp3', 'wb') as out:
+        out.write(response.audio_content)
 @app.errorhandler(500)
 def server_error(e):
     logging.exception('An error occurred during a request.')

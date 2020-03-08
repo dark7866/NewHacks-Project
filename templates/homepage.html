@@ -14,7 +14,7 @@
       <p>{{image_entity['blob_name']}}.</p>
       {% endfor %}
     <audio controls="controls">
-    	<source src="data:audio/mpeg;base64,"+{image_entity['audio']}>
+	    <source src="http://0.0.0.0:8000/output.mp3" type="audio/mpeg">
     </audio>
 
   </body>
